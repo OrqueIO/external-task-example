@@ -103,8 +103,9 @@ External Tasks implement the **poll-based** service invocation pattern:
 
 ##  Prerequisites
 
-- **Java 17+** - [Download OpenJDK](https://adoptium.net/)
+- **Java 21+** - [Download OpenJDK](https://adoptium.net/)
 - **Maven 3.6+** - [Download Maven](https://maven.apache.org/download.cgi)
+- **SpringBoot 4.x** 
 - **Git** (for cloning the repository)
 
 **No external database or additional services required!**
