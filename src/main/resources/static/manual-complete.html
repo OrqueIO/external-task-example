@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete External Task - Manual</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-height: 400px;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #155724;
+            background: #d4edda;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Complete External Task Manually</h1>
+
+        <div class="section">
+            <h2>Step 1: Fetch Available Tasks</h2>
+            <label>Topic Name:</label>
+            <input type="text" id="topicName" value="process-data" />
+            <br/>
+            <button onclick="fetchTasks()">📋 Fetch Tasks</button>
+            <div id="taskList"></div>
+        </div>
+
+        <div class="section">
+            <h2>Step 2: Complete Task</h2>
+            <label>Task ID:</label>
+            <input type="text" id="taskId" placeholder="Copy task ID from above" />
+
+            <label>Worker ID:</label>
+            <input type="text" id="workerId" value="manual-web-worker" />
+
+            <label>Processed Data (result):</label>
+            <textarea id="processedData" rows="3" placeholder="Enter the processed result"></textarea>
+
+            <label>Status:</label>
+            <input type="text" id="status" value="SUCCESS" />
+
+            <br/>
+            <button onclick="completeTask()">✅ Complete Task</button>
+            <button onclick="failTask()">❌ Fail Task</button>
+            <div id="completeResult"></div>
+        </div>
+
+        <div class="section">
+            <h2>Step 3: View Results</h2>
+            <button onclick="viewHistory()">📊 View Process History</button>
+            <div id="historyResult"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/engine-rest';
+
+        async function fetchTasks() {
+            const topic = document.getElementById('topicName').value;
+            const resultDiv = document.getElementById('taskList');
+
+            try {
+                const response = await fetch(`${API_BASE}/external-task/fetchAndLock`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        workerId: 'manual-web-worker',
+                        maxTasks: 10,
+                        topics: [{
+                            topicName: topic,
+                            lockDuration: 300000  // 5 minutes
+                        }]
+                    })
+                });
+
+                const tasks = await response.json();
+
+                if (tasks.length === 0) {
+                    resultDiv.innerHTML = '<div class="error">No tasks available. Start a process instance first!</div>';
+                } else {
+                    resultDiv.innerHTML = '<div class="success">Found ' + tasks.length + ' task(s)</div>';
+                    resultDiv.innerHTML += '<pre>' + JSON.stringify(tasks, null, 2) + '</pre>';
+
+                    // Auto-fill first task ID
+                    if (tasks[0]) {
+                        document.getElementById('taskId').value = tasks[0].id;
+                        if (tasks[0].variables && tasks[0].variables.inputData) {
+                            document.getElementById('processedData').value =
+                                'PROCESSED: ' + tasks[0].variables.inputData.value.toUpperCase();
+                        }
+                    }
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        }
+
+        async function completeTask() {
+            const taskId = document.getElementById('taskId').value;
+            const workerId = document.getElementById('workerId').value;
+            const processedData = document.getElementById('processedData').value;
+            const status = document.getElementById('status').value;
+            const resultDiv = document.getElementById('completeResult');
+
+            if (!taskId) {
+                resultDiv.innerHTML = '<div class="error">Please enter a Task ID</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/external-task/${taskId}/complete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        workerId: workerId,
+                        variables: {
+                            processedData: {
+                                value: processedData,
+                                type: 'String'
+                            },
+                            status: {
+                                value: status,
+                                type: 'String'
+                            }
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    resultDiv.innerHTML = '<div class="success">✅ Task completed successfully!</div>';
+                } else {
+                    const error = await response.text();
+                    resultDiv.innerHTML = '<div class="error">Error: ' + error + '</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        }
+
+        async function failTask() {
+            const taskId = document.getElementById('taskId').value;
+            const workerId = document.getElementById('workerId').value;
+            const resultDiv = document.getElementById('completeResult');
+
+            if (!taskId) {
+                resultDiv.innerHTML = '<div class="error">Please enter a Task ID</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/external-task/${taskId}/failure`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        workerId: workerId,
+                        errorMessage: 'Manual failure from web UI',
+                        errorDetails: 'Task manually failed by user',
+                        retries: 3,
+                        retryTimeout: 10000
+                    })
+                });
+
+                if (response.ok) {
+                    resultDiv.innerHTML = '<div class="success">⚠️ Task marked as failed with retry</div>';
+                } else {
+                    const error = await response.text();
+                    resultDiv.innerHTML = '<div class="error">Error: ' + error + '</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        }
+
+        async function viewHistory() {
+            const resultDiv = document.getElementById('historyResult');
+
+            try {
+                const response = await fetch(`${API_BASE}/history/process-instance?finished=true&sortBy=endTime&sortOrder=desc`);
+                const history = await response.json();
+
+                resultDiv.innerHTML = '<pre>' + JSON.stringify(history, null, 2) + '</pre>';
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        }
+    </script>
+</body>
+</html>
