@@ -19,6 +19,9 @@ server:
   port: 8080
 
 orqueio:
+  base-url: http://localhost:8080/engine-rest
+
+camunda:
   bpm:
     rest-api:
       enabled: true
@@ -36,7 +39,6 @@ orqueio:
     filter:
       create: All tasks
     deployment-resource-pattern: classpath*:bpmn/*.bpmn
-  base-url: http://localhost:8080/engine-rest
 
 logging:
   level:
