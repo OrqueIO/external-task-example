@@ -21,6 +21,7 @@ server:
 orqueio:
   bpm:
     rest-api:
+      enabled: true
       basic-auth-enabled: false
     database:
       schema-update: true
