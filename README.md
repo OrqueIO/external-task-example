@@ -105,7 +105,7 @@ External Tasks implement the **poll-based** service invocation pattern:
 
 - **Java 17+** - [Download OpenJDK](https://adoptium.net/)
 - **Maven 3.6+** - [Download Maven](https://maven.apache.org/download.cgi)
-- **SpringBoot 3.x** 
+- **SpringBoot 3.x**
 - **Git** (for cloning the repository)
 
 **No external database or additional services required!**
@@ -175,8 +175,8 @@ INFO : External task completed successfully: [task-id]
 
 1. Open browser: **http://localhost:8080**
 2. Login with credentials:
-   - Username: `admin`
-   - Password: `admin`
+    - Username: `admin`
+    - Password: `admin`
 3. Navigate to **Cockpit**
 4. View the deployed process: **"External Task Sample Process"**
 5. Start a new process instance
@@ -261,104 +261,6 @@ orqueio:
       password: admin
     deployment-resource-pattern: classpath*:bpmn/*.bpmn  # Auto-deploy
   base-url: http://localhost:8080/engine-rest            # Worker connection
-```
-
-### Worker Configuration
-
-In `SampleExternalTaskWorker.java`:
-
-```java
-client.subscribe("process-data")    // Topic name
-      .lockDuration(10000)           // Lock for 10 seconds
-      .handler((task, service) -> {
-          // Your business logic here
-      })
-      .open();
-```
-
-##  Customization
-
-### 1. Create Your Own BPMN Process
-
-1. Design your process in [Camunda Modeler](https://camunda.com/download/modeler/)
-2. Add an **External Service Task**:
-   - Type: `External`
-   - Topic: `your-custom-topic`
-3. Save to `src/main/resources/bpmn/your-process.bpmn`
-4. Restart the application (auto-deployment)
-
-### 2. Create Your Own Worker
-
-Create a new worker class:
-
-```java
-@Slf4j
-@Component
-public class CustomWorker implements CommandLineRunner {
-
-    @Value("${orqueio.base-url}")
-    private String orqueioBaseUrl;
-
-    @Override
-    public void run(String... args) throws InterruptedException {
-        Thread.sleep(5000); // Wait for engine startup
-
-        ExternalTaskClient client = ExternalTaskClient.create()
-                .baseUrl(orqueioBaseUrl)
-                .build();
-
-        client.subscribe("your-custom-topic")
-                .lockDuration(20000)
-                .handler((externalTask, externalTaskService) -> {
-                    try {
-                        // 1. Get input variables
-                        String input = (String) externalTask.getVariable("inputVar");
-
-                        // 2. Execute your business logic
-                        String result = yourBusinessLogic(input);
-
-                        // 3. Complete the task with results
-                        externalTaskService.complete(externalTask,
-                            Map.of("outputVar", result));
-
-                    } catch (Exception e) {
-                        // 4. Handle failures with retry
-                        externalTaskService.handleFailure(externalTask,
-                            e.getMessage(),
-                            e.toString(),
-                            3,    // Retry 3 times
-                            5000  // Wait 5 seconds between retries
-                        );
-                    }
-                })
-                .open();
-    }
-
-    private String yourBusinessLogic(String input) {
-        // Your custom logic here
-        return "Processed: " + input;
-    }
-}
-```
-
-### 3. Modify Business Logic
-
-Edit the `processData()` method in `SampleExternalTaskWorker.java`:
-
-```java
-private String processData(String input) {
-    // Current: Convert to uppercase and add prefix
-    // return "PROCESSED: " + input.toUpperCase();
-
-    // Example: Call external API
-    // return externalService.process(input);
-
-    // Example: Database operation
-    // return repository.save(new Data(input)).getId();
-
-    // Your custom logic
-    return yourCustomLogic(input);
-}
 ```
 
 ##  API Reference
