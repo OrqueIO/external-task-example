@@ -1,8 +1,8 @@
 # OrqueIO External Task Example
 
-[![OrqueIO](https://img.shields.io/badge/OrqueIO-1.0.7--SNAPSHOT-blue.svg)](https://orqueio.io)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://openjdk.org/)
+[![OrqueIO](https://img.shields.io/badge/OrqueIO-1.0.3-blue.svg)](https://orqueio.io)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.8-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 A complete, ready-to-run Spring Boot application demonstrating the **External Task Pattern** with OrqueIO BPM engine. This all-in-one example includes both the OrqueIO engine and an external task worker in a single application.
@@ -20,6 +20,8 @@ A complete, ready-to-run Spring Boot application demonstrating the **External Ta
 - [Configuration](#configuration)
 - [Customization](#customization)
 - [API Reference](#api-reference)
+- [Key Components](#key-components)
+- [Dependencies](#dependencies)
 
 ##  Overview
 
@@ -103,9 +105,8 @@ External Tasks implement the **poll-based** service invocation pattern:
 
 ##  Prerequisites
 
-- **Java 17+** - [Download OpenJDK](https://adoptium.net/)
+- **Java 17** - [Download OpenJDK](https://adoptium.net/)
 - **Maven 3.6+** - [Download Maven](https://maven.apache.org/download.cgi)
-- **SpringBoot 3.x**
 - **Git** (for cloning the repository)
 
 **No external database or additional services required!**
@@ -242,26 +243,112 @@ server:
   port: 8080                        # Application port
 
 spring:
+  application:
+    name: external-task-example
   datasource:
-    url: jdbc:h2:mem:orqueio        # H2 in-memory database
+    url: jdbc:h2:mem:orqueio;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
+    username: sa
+    password:
   h2:
     console:
       enabled: true                  # H2 console at /h2-console
       path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
 
 orqueio:
+  base-url: http://localhost:8080/engine-rest  # Worker connection URL
+
+camunda:
   bpm:
     rest-api:
+      enabled: true
       basic-auth-enabled: false      # Disable auth for development
     database:
       schema-update: true            # Auto-update DB schema
+    job-execution:
+      core-pool-size: 3              # Thread pool for job execution
+    authorization:
+      enabled: false                 # Disable authorization for development
     admin-user:
       id: admin
       password: admin
-    deployment-resource-pattern: classpath*:bpmn/*.bpmn  # Auto-deploy
-  base-url: http://localhost:8080/engine-rest            # Worker connection
+      firstName: Admin
+    filter:
+      create: All tasks
+    deployment-resource-pattern: classpath*:bpmn/*.bpmn  # Auto-deploy BPMN files
+
+logging:
+  level:
+    root: INFO
+    io.orqueio: DEBUG
+    io.orqueio.externaltask: DEBUG   # Enable debug logging for worker
 ```
+
+##  Customization
+
+### Worker Configuration
+
+The external task worker is implemented in `SampleExternalTaskWorker.java` with the following key configurations:
+
+```java
+// Topic subscription
+client.subscribe("process-data")
+    .lockDuration(10000)  // 10 seconds lock
+    .handler((externalTask, externalTaskService) -> {
+        // Task processing logic
+    })
+    .open();
+```
+
+**Key Parameters:**
+- **Topic Name**: `process-data` - Must match the topic in your BPMN process
+- **Lock Duration**: `10000ms` (10 seconds) - Time the worker has to complete the task
+- **Startup Delay**: `5000ms` (5 seconds) - Wait time for OrqueIO engine initialization
+
+### Custom Worker Logic
+
+To customize the worker processing logic, modify the `processData()` method in `SampleExternalTaskWorker.java:82`:
+
+```java
+private String processData(String input) {
+    if (input == null) {
+        return "No data provided";
+    }
+    // Add your custom processing logic here
+    return "PROCESSED: " + input.toUpperCase();
+}
+```
+
+### Error Handling
+
+The worker includes built-in error handling with retry mechanism:
+
+```java
+externalTaskService.handleFailure(externalTask,
+    e.getMessage(),              // Error message
+    "Error details: " + e.getClass().getName(),  // Error details
+    3,                           // Number of retries
+    5000);                       // Retry timeout in milliseconds
+```
+
+### Database Configuration
+
+To switch from H2 to a persistent database (PostgreSQL/MySQL), update `application.yml`:
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/orqueio
+    driver-class-name: org.postgresql.Driver
+    username: your_username
+    password: your_password
+```
+
+And add the corresponding JDBC driver to `pom.xml`.
 
 ##  API Reference
 
@@ -338,6 +425,9 @@ Content-Type: application/json
 
 - **Full REST API**: http://localhost:8080/engine-rest
 - **H2 Console**: http://localhost:8080/h2-console
+  - JDBC URL: `jdbc:h2:mem:orqueio`
+  - Username: `sa`
+  - Password: (empty)
 - **Manual Completion UI**: http://localhost:8080/manual-complete.html
 
 ##  Troubleshooting
@@ -372,14 +462,87 @@ Content-Type: application/json
 
 ### Enable Debug Logging
 
-Add to `application.yml`:
+Debug logging is already enabled by default in `application.yml`:
 
 ```yaml
 logging:
   level:
+    root: INFO
     io.orqueio: DEBUG
     io.orqueio.externaltask: DEBUG
 ```
+
+To disable debug logging, change the levels to `INFO` or `WARN`.
+
+##  Key Components
+
+### 1. ExternalTaskApplication.java
+
+Simple Spring Boot application entry point:
+
+```java
+@SpringBootApplication
+public class ExternalTaskApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ExternalTaskApplication.class, args);
+    }
+}
+```
+
+### 2. SampleExternalTaskWorker.java
+
+The worker implementation that:
+- Implements `CommandLineRunner` to start on application startup
+- Creates an `ExternalTaskClient` connecting to OrqueIO REST API
+- Subscribes to the `process-data` topic
+- Processes tasks by transforming input data to uppercase
+- Handles errors with automatic retry mechanism
+- Properly shuts down on application termination
+
+**Key Methods:**
+- `run()` - Initializes the worker and subscribes to topics
+- `processData()` - Business logic for processing external tasks
+
+##  Dependencies
+
+The project uses the following key dependencies (defined in `pom.xml`):
+
+```xml
+<!-- OrqueIO BPM Engine -->
+<dependency>
+    <groupId>io.orqueio.bpm.springboot</groupId>
+    <artifactId>orqueio-bpm-spring-boot-starter-webapp</artifactId>
+</dependency>
+
+<!-- OrqueIO REST API -->
+<dependency>
+    <groupId>io.orqueio.bpm.springboot</groupId>
+    <artifactId>orqueio-bpm-spring-boot-starter-rest</artifactId>
+</dependency>
+
+<!-- External Task Client -->
+<dependency>
+    <groupId>io.orqueio.bpm</groupId>
+    <artifactId>orqueio-external-task-client</artifactId>
+</dependency>
+
+<!-- H2 Database -->
+<dependency>
+    <groupId>com.h2database</groupId>
+    <artifactId>h2</artifactId>
+</dependency>
+
+<!-- Lombok (for annotations) -->
+<dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+</dependency>
+```
+
+**Versions:**
+- OrqueIO: `1.0.3`
+- Spring Boot: `3.5.8`
+- Java: `17`
 
 ##  License
 
@@ -389,6 +552,7 @@ This project is licensed under the Apache License 2.0 - see the LICENSE file for
 
 - **Issues**: [GitHub Issues](https://github.com/orqueio/external-task-example/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/orqueio/external-task-example/discussions)
+- **Documentation**: [OrqueIO Documentation](https://orqueio.io)
 - **Community**: Join our [Discord Server](https://discord.gg/orqueio)
 
 ---
