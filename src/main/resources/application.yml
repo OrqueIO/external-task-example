@@ -20,8 +20,6 @@ server:
 
 orqueio:
   base-url: http://localhost:8080/engine-rest
-
-camunda:
   bpm:
     rest-api:
       enabled: true
