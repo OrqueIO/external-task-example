@@ -1,8 +1,8 @@
 # OrqueIO External Task Example
 
 [![OrqueIO](https://img.shields.io/badge/OrqueIO-1.0.5-blue.svg)](https://orqueio.io)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.8-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.9-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 A complete, ready-to-run Spring Boot application demonstrating the **External Task Pattern** with OrqueIO BPM engine. This all-in-one example includes both the OrqueIO engine and an external task worker in a single application.
@@ -105,7 +105,7 @@ External Tasks implement the **poll-based** service invocation pattern:
 
 ##  Prerequisites
 
-- **Java 17** - [Download OpenJDK](https://adoptium.net/)
+- **Java 21** - [Download OpenJDK](https://adoptium.net/)
 - **Maven 3.6+** - [Download Maven](https://maven.apache.org/download.cgi)
 - **Git** (for cloning the repository)
 
@@ -545,8 +545,8 @@ The project uses the following key dependencies (defined in `pom.xml`):
 
 **Versions:**
 - OrqueIO: `1.0.5`
-- Spring Boot: `3.5.8`
-- Java: `17`
+- Spring Boot: `3.5.9`
+- Java: `21`
 
 ##  Support
 
