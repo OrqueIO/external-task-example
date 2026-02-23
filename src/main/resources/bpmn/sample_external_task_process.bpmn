@@ -4,18 +4,19 @@
                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
                   xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:orqueio="http://orqueio.io/schema/1.0/bpmn"
                   id="Definitions_1"
                   targetNamespace="http://bpmn.io/schema/bpmn"
                   exporter="Camunda Modeler"
                   exporterVersion="5.0.0">
-  <bpmn:process id="ExternalTaskProcess" name="External Task Sample Process" isExecutable="true" camunda:historyTimeToLive="P30D">
+  <bpmn:process id="ExternalTaskProcess" name="External Task Sample Process" isExecutable="true" orqueio:historyTimeToLive="P30D">
     <bpmn:startEvent id="StartEvent_1" name="Start">
       <bpmn:outgoing>Flow_1</bpmn:outgoing>
     </bpmn:startEvent>
 
     <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="ExternalTask_ProcessData" />
 
-    <bpmn:serviceTask id="ExternalTask_ProcessData" name="Process Data" camunda:type="external" camunda:topic="process-data">
+    <bpmn:serviceTask id="ExternalTask_ProcessData" name="Process Data" orqueio:type="external" orqueio:topic="process-data">
       <bpmn:incoming>Flow_1</bpmn:incoming>
       <bpmn:outgoing>Flow_2</bpmn:outgoing>
     </bpmn:serviceTask>
