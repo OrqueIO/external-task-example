@@ -2,16 +2,19 @@ package io.orqueio.externaltask.worker;
 
 import io.orqueio.bpm.client.ExternalTaskClient;
 import io.orqueio.bpm.client.topic.TopicSubscription;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
-@Slf4j
+
 @Component
 public class SampleExternalTaskWorker implements CommandLineRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(SampleExternalTaskWorker.class);
 
     @Value("${orqueio.base-url}")
     private String orqueioBaseUrl;
@@ -51,8 +54,8 @@ public class SampleExternalTaskWorker implements CommandLineRunner {
 
                         // Complete the task with result variables
                         externalTaskService.complete(externalTask,
-                            Map.of("processedData", processedData,
-                                   "status", "SUCCESS"));
+                                Map.of("processedData", processedData,
+                                        "status", "SUCCESS"));
 
                         log.info("External task completed successfully: {}", externalTask.getId());
 
@@ -61,10 +64,10 @@ public class SampleExternalTaskWorker implements CommandLineRunner {
 
                         // Handle failure
                         externalTaskService.handleFailure(externalTask,
-                            e.getMessage(),
-                            "Error details: " + e.getClass().getName(),
-                            3, // retries
-                            5000); // retry timeout in ms
+                                e.getMessage(),
+                                "Error details: " + e.getClass().getName(),
+                                3, // retries
+                                5000); // retry timeout in ms
                     }
                 })
                 .open();
