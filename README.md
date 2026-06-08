@@ -536,8 +536,8 @@ The project uses the following key dependencies (defined in `pom.xml`):
 ```
 
 **Versions:**
-- OrqueIO: `1.0.7`
-- Spring Boot: `3.5.9`
+- OrqueIO: `1.0.9`
+- Spring Boot: `3.5.11`
 - Java: `21`
 
 ##  Support
