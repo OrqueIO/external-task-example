@@ -1,7 +1,7 @@
 # OrqueIO External Task Example
 
-[![OrqueIO](https://img.shields.io/badge/OrqueIO-2.0.4-blue.svg)](https://orqueio.io)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.6-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![OrqueIO](https://img.shields.io/badge/OrqueIO-2.1.0-blue.svg)](https://orqueio.io)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-25-orange.svg)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
@@ -536,8 +536,8 @@ The project uses the following key dependencies (defined in `pom.xml`):
 ```
 
 **Versions:**
-- OrqueIO: `2.0.4`
-- Spring Boot: `4.0.6`
+- OrqueIO: `2.1.0`
+- Spring Boot: `4.1.0`
 - Java: `25`
 
 ##  Support
