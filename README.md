@@ -1,6 +1,6 @@
 # OrqueIO External Task Example
 
-[![OrqueIO](https://img.shields.io/badge/OrqueIO-1.0.10-blue.svg)](https://orqueio.io)
+[![OrqueIO](https://img.shields.io/badge/OrqueIO-1.0.11-blue.svg)](https://orqueio.io)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.11-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -536,7 +536,7 @@ The project uses the following key dependencies (defined in `pom.xml`):
 ```
 
 **Versions:**
-- OrqueIO: `1.0.10`
+- OrqueIO: `1.0.11`
 - Spring Boot: `3.5.11`
 - Java: `21`
 
